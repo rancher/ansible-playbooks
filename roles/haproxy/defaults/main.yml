@@ -1,0 +1,18 @@
+---
+# # Default variables for HAProxy
+
+# Set this to `false` to disable installation of haproxy completely
+haproxy_enabled: true
+
+# Where is haproxy's configuration directory?
+confdir: /etc/haproxy
+
+# Where do we install our certs?
+certdir: certs
+
+# What is the name of our default certificate file?
+certfile: server.pem
+
+global:
+  maxconn: 1024
+

@@ -1,0 +1,17 @@
+---
+
+- name: get public IP
+  ipify_facts:
+  when: not public_ip|default(False)
+
+- include: docker.yml
+  tags: docker
+
+- include: server.yml
+  tags: server
+  when: "'server' in group_names"
+
+- include: node.yml
+  tags: node
+  when: "'node' in group_names and
+        rancher_env in api_keys|default([])"

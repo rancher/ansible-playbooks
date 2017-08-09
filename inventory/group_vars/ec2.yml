@@ -1,0 +1,8 @@
+# variables for EC2 hosts
+
+hostname: '{{ ec2_tag_Name if ec2_tag_Name else "ip-" ~ ec2_private_ip_address|replace(".", "-") }}'
+
+rancher_env: "{{ ec2_tag_rancher_env|default('unset') }}"
+
+public_ip: '{{ ec2_ip_address }}'
+private_ip: '{{ ec2_private_ip_address }}'

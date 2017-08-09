@@ -1,0 +1,46 @@
+# variables for the server role
+
+# name of the server container - you don't really want to set this because
+# it prevents you from upgrading without first removing the existing container.
+# if your upgrade goes bad, it's more difficult to rollback.
+# server_name: rancher-server
+
+# the repo you want to pull from (either `server` or `enterprise`)
+server_repo: server
+
+# the tag that we want to pull (if using `enterprise`, there is no
+# `stable` tag)
+server_version: stable
+
+# if we're connected to an external db
+# this is turned on automatically if you have `force_ha` 
+# or multiple hosts with the `role` of `server`
+use_external_db: False
+
+# alternatively, set this to a bind-mount location on 
+# the host to put MySQL content there. *NOTE:* 
+# `use_external_db` from above will take priority over
+# this variable.
+bind_mount_location: /opt/docker/rancher/mysql-var
+
+# set this to true for servers to advertise their public IPs
+# instead of private IPs
+advertise_public_ip: False
+
+# set this to true to force HA if you only have one server
+force_ha: False
+
+# the following variables are only needed if `use_external_db`
+# is `True`
+db_host: some.rds.host.com
+db_user: cattle
+db_name: cattle
+db_port: 3306
+# db_password: store_in_vault
+
+# set this to a user who is able to create databases
+# for RDS this is the master user
+db_admin_user: dbadmin
+# db_admin_password: store_in_vault
+
+

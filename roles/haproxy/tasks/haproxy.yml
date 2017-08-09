@@ -1,0 +1,68 @@
+---
+# # HAProxy
+
+# We run haproxy on all of the Docker hosts to proxy HTTP and HTTPS connections through to containers.
+# HTTPS is trickier because some browsers don't support SNI, but it's worth losing a small part of
+# traffic for the convenience we get from Docker in general.
+
+# Install the haproxy repo and then install haproxy itself.
+- name: add haproxy repo
+  apt_repository: repo='ppa:vbernat/haproxy-1.7' update_cache=yes
+  when: ansible_distribution == "Ubuntu"
+  tags: apt
+
+- name: install haproxy and friends
+  apt: name={{ item }} state=latest
+  when: ansible_os_family == "Debian"
+  tags: apt
+  with_items:
+    - haproxy
+    - hatop
+    - socat
+
+# Put our management user into the `haproxy` group so that we can run hatop without `sudo`
+- name: put ssh user into haproxy group
+  user: name={{ ansible_user }} groups=haproxy append=yes
+
+- name: make cert dir
+  file:
+    dest: "{{ confdir }}/{{ certdir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  tags: always
+
+- name: install main cert
+  copy:
+    content: "{{ ssl_certificates.cert }}{{ ssl_certificates.key }}"
+    dest: "{{ confdir }}/{{ certfile }}"
+    owner: root
+    group: root
+    mode: 0640
+  tags: config
+  notify: reload haproxy
+
+- name: install haproxy config file
+  template:
+    src: "haproxy.cfg.j2"
+    dest: "{{ confdir }}/haproxy.cfg"
+    owner: root
+    group: root
+    mode: 0640
+    validate: haproxy -f %s -c
+  tags: config
+  notify: reload haproxy
+
+# Enable haproxy on Debian-based systems.
+- name: enable haproxy
+  lineinfile:
+    dest: /etc/default/haproxy
+    regexp: '^ENABLED'
+    line: 'ENABLED=1'
+  when: ansible_os_family == "Debian"
+  tags: always
+
+- name: make sure haproxy is running
+  service: name=haproxy state=started enabled=true
+  tags: always

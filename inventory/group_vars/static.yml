@@ -1,0 +1,4 @@
+# variables for static hosts
+
+private_ip: '{{ ansible_default_ipv4.address }}'
+

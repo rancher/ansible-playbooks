@@ -1,0 +1,17 @@
+---
+# haproxy
+#
+# this only loads if there is a `loadbalancer` group. if there is not,
+# then the haproxy role is loaded by the `rancher.yml` playbook for 
+# the `server` group
+
+- hosts:
+    - loadbalancer
+  become: True
+  gather_facts: True
+  vars_files:
+    - vars/default.yml
+    - vars/private.yml
+  roles:
+    - { role: haproxy, tags: haproxy }
+

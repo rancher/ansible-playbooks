@@ -1,0 +1,25 @@
+---
+- hosts:
+    - server
+  become: True
+  gather_facts: True
+  vars_files:
+    - vars/default.yml
+    - vars/private.yml
+  roles:
+    - { role: rancher, tags: rancher }
+    - { role: haproxy, tags: haproxy, when: not 'loadbalancer' in groups}
+  tags:
+    - rancher
+
+- hosts:
+    - node
+  become: True
+  gather_facts: True
+  vars_files:
+    - vars/default.yml
+    - vars/private.yml
+  roles:
+    - { role: rancher, tags: rancher }
+  tags:
+    - rancher

@@ -1,0 +1,9 @@
+---
+# haproxy handlers
+- name: restart haproxy
+  service: name=haproxy state=restarted
+  tags: haproxy
+
+- name: reload haproxy
+  service: name=haproxy state=reloaded
+  tags: haproxy

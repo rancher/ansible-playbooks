@@ -1,0 +1,3 @@
+---
+- include: rancher.yml
+- include: haproxy.yml

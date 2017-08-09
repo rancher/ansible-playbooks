@@ -1,0 +1,5 @@
+# rancher defaults
+
+# we set this to False here and pull it from the ipify facts in the
+# playbook
+public_ip: False

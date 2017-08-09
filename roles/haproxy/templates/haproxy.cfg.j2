@@ -1,0 +1,48 @@
+#jinja2: lstrip_blocks: True
+global
+  maxconn {{ global.maxconn }}
+  tune.ssl.default-dh-param 2048
+  ssl-default-bind-options no-sslv3 no-tls-tickets
+  ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+
+  ssl-default-server-options no-sslv3 no-tls-tickets
+  ssl-default-server-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+
+  stats socket /var/run/haproxy/haproxy.sock mode 0660 level admin group haproxy
+
+defaults
+  mode tcp
+  timeout connect 5s
+  timeout queue 5s
+  timeout client 30s
+  timeout server 30s
+
+  balance roundrobin
+
+frontend ft_web_80
+    bind :80
+    mode http
+
+    # bounce to https
+    redirect scheme https code 301 if !{ ssl_fc }
+
+frontend ft_web_443
+  timeout client 24h
+  timeout server 24h
+  
+  bind :443 ssl crt /etc/haproxy/server.pem crt /etc/haproxy/certs
+
+  # normal backend routing
+  use_backend bk_rancher
+
+backend bk_rancher
+  option httpchk /ping
+
+  {% if groups['server']|length == 1 and groups['server'][0] == public_ip|default(ipify_public_ip) %}
+  server s1 localhost:8080 check fall 3 rise 2 maxconn 256 send-proxy
+  {% else %}
+  {% for ip in hostvars[inventory_hostname]['groups']['server'] %}
+  server s{{ loop.index }} {{ hostvars[ip]['private_ip'] }}:8080 check fall 3 rise 2 maxconn 256 send-proxy
+  {% endfor %}
+  {% endif %}
+

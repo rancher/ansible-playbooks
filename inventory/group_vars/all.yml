@@ -1,0 +1,6 @@
+# variables for all systems
+
+docker_version: 1.12
+
+server_url: http://172.31.1.13:8080
+

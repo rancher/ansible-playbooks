@@ -1,0 +1,15 @@
+{% if use_external_db|default(False) or hostvars[inventory_hostname]['groups']['server']|length > 1 %}
+{% set db_string = " --db-host " + db_host + " --db-user " + db_user + " --db-pass " + db_pass + " --db-port " + db_port|string + " --db-name " + db_name  %}
+{% elif bind_mount_location|default(False) %}
+{% set volume_string = "-v " + bind_mount_location + ":/var/lib/mysql" %}
+{% endif %}
+{% if hostvars[inventory_hostname]['groups']['server']|length > 1 or force_ha|default(False) %}
+{# multiple servers - HA setup #}
+{% set ports = "-p 8080:8080 -p 9345:9345" %}
+{% set volume_string = '' %}
+{% set advertise_string = "--advertise-address " + ( public_ip|default(ipify_public_ip) if advertise_public_ip|default(False) else private_ip ) %}
+{% endif %}
+{% if server_name|default(False) %}
+{% set name_string = "--name " + server_name %} 
+{% endif %}
+docker run -d --restart=unless-stopped {{ ports|default('-p 8080:8080') }} {{ volume_string|default('') }} {{ name_string|default('') }} rancher/{{ server_repo|default('server') }}:{{ server_version|default('stable') }} {{ db_string|default('') }} {{ advertise_string|default('') }}

@@ -1,0 +1,58 @@
+---
+- name: install additional dependencies (apt)
+  apt: name={{ item }} state=present
+  with_items:
+    - python-mysqldb
+    - mysql-client
+  tags: apt
+
+- name: sanity check on options
+  fail: msg="Please set external db options when running with > 1 server or with use_external_db=true"
+  when: (use_external_db|default(False) or hostvars[inventory_hostname]['groups']['server']|length > 1) and 
+        (not db_host or not db_name or not db_user or not db_pass or not db_port )   
+
+- name: create the database (if necessary)
+  mysql_db: 
+    name: "{{ db_name }}" 
+    collation: utf8_general_ci 
+    encoding: utf8 
+    login_host: "{{ db_host }}" 
+    login_user: "{{ db_admin_user }}" 
+    login_password: "{{ db_admin_pass }}" 
+    state: present 
+    login_port: "{{ db_port }}"
+  run_once: true
+  when: use_external_db|default(False) or hostvars[inventory_hostname]['groups']['server']|length > 1
+  tags: 
+    - mysql
+
+- name: create the database user (if necessary)
+  mysql_user: 
+    name: "{{ db_user }} "
+    host: '%' 
+    password: "{{ db_pass }}"
+    login_user: "{{ db_admin_user }}"
+    login_password: "{{ db_admin_pass }}"
+    login_host: "{{ db_host }}" 
+    login_port: "{{ db_port }}" 
+    state: present
+    priv: "{{ db_name }}.*:ALL"
+  run_once: true
+  when: use_external_db|default(False) or hostvars[inventory_hostname]['groups']['server']|length > 1
+  tags: 
+    - mysql
+
+- name: check if rancher container is running
+  shell: docker ps | grep rancher/server
+  register: server_running
+  ignore_errors: true
+  changed_when: false
+
+- name: remove any previous rancher server (to avoid conflict)
+  docker_container: name={{ server_name }} state=absent
+  when: server_name is defined and
+        not server_running|success
+
+- name: start rancher server
+  command: '{{lookup("template", "server_launch.j2")}}'
+  when: not server_running|success

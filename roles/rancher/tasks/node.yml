@@ -1,0 +1,62 @@
+---
+
+# tasks specific to nodes
+
+- name: determine if we're already running an agent
+  shell: "docker ps | fgrep -q rancher/agent"
+  register: agent_installed
+  ignore_errors: true
+  changed_when: false
+
+# this gets all of the available registration tokens
+# for this environment. 
+- name: get registration tokens
+  uri: 
+    method: GET 
+    status_code: 200 
+    url: "{{ server_url }}/v2-beta/projects/{{ rancher_env }}/registrationTokens/"
+    user: "{{ api_keys[rancher_env].access_key }}" 
+    password: "{{ api_keys[rancher_env].secret_key }}"
+  register: registration_tokens
+  when: agent_installed|failed
+
+# some or all of the tokens might be inactive, so we need
+# to find the first active one and use it to register
+# our host
+- name: register host (attempt one)
+  command: "{{(registration_tokens.json.data|selectattr('state', 'equalto', 'active')|first).command|replace('sudo ', '')}}"
+  when: agent_installed|failed and 
+        registration_tokens.json.data|selectattr('state', 'equalto', 'active')|list|length > 0
+  register: registration_attempt_one
+
+# if we have no active registration tokens, we need
+# to create one
+- name: create registration url
+  uri: 
+    method: POST 
+    status_code: 201 
+    url: "{{ server_url }}/v2-beta/projects/{{ rancher_env }}/registrationTokens/"
+    user: "{{ api_keys[rancher_env].access_key }} "
+    password: "{{ api_keys[rancher_env].secret_key }}"
+  when: agent_installed|failed and
+        registration_attempt_one|skipped
+  run_once: true
+
+# having created one, we can now fetch it
+- name: get registration tokens (again)
+  uri: 
+    method: GET 
+    status_code: 200 
+    url: "{{ server_url }}/v2-beta/projects/{{ rancher_env }}/registrationTokens/"
+    user: "{{ api_keys[rancher_env].access_key }}" 
+    password: "{{ api_keys[rancher_env].secret_key }}"
+  register: registration_tokens_redux
+  when: agent_installed|failed and
+        registration_attempt_one|skipped
+
+# we now have an active registration token that we can
+# use to register the host
+- name: register host (attempt two)
+  command: "{{(registration_tokens_redux.json.data|selectattr('state', 'equalto', 'active')|first).command}}"
+  when: agent_installed|failed and
+        registration_attempt_one|skipped

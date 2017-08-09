@@ -1,0 +1,39 @@
+# static groups
+[static_server]
+
+[static_node]
+
+[static_loadbalancer]
+
+# EC2 dynamic groups
+[tag_rancher_role_server]
+[tag_rancher_role_node]
+[tag_rancher_role_loadbalancer]
+
+
+###################################
+### DO NOT EDIT BELOW THIS LINE ###
+###################################
+
+# this group is used for variable assignment of static hosts
+[static:children]
+static_server
+static_node
+static_loadbalancer
+
+# collected groups - these are what Ansible actually uses in its
+# playbooks
+
+[server:children]
+static_server
+tag_rancher_role_server
+
+[node:children]
+static_node
+tag_rancher_role_node
+
+[loadbalancer:children]
+static_loadbalancer
+tag_rancher_role_loadbalancer
+
+
