@@ -38,6 +38,18 @@ Add the following code  to the "User data" section under "Advanced Details" in S
 apt-get -qq update && apt-get -qq install python python-pip
 ```
 
+Alternatively, add the following:
+```
+#cloud-config
+
+package_upgrade: true
+package_update: true
+packages: 
+  - curl
+  - python
+  - python-pip
+```
+
   * Rancher Server
     * 1 or 2 `t2.small` instances with 16 GB of disk
     * tag these hosts with
