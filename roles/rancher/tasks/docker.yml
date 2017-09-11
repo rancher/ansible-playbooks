@@ -16,8 +16,18 @@
   when: not docker_installed|success or
         not docker_installed_version.stdout|search(docker_version|string)
 
-- name: install pip
-  apt: name=python-pip state=latest
+- name: uninstall pip
+  apt: name=python-pip state=absent
+  when: ansible_os_family == "Debian"
+
+  # Debian ships with pip v1.5 in apt, which is too broken (#5)
+- name: install pip (Debian)
+  easy_install: name=pip state=latest
+  when: ansible_distribution == "Debian"
+
+- name: upgrade pip (Ubuntu)
+  pip: name=pip state=latest
+  when: ansible_os_family == "Debian" and not ansible_distribution == "Debian"
 
 - name: install additional dependencies (pip)
   pip: name=docker-py state=present
