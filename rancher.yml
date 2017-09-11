@@ -8,7 +8,7 @@
     - vars/private.yml
   roles:
     - { role: rancher, tags: rancher }
-    - { role: haproxy, tags: haproxy, when: not 'loadbalancer' in groups}
+    - { role: haproxy, tags: haproxy, when: "groups['loadbalancer']|count == 0"}
   tags:
     - rancher
 

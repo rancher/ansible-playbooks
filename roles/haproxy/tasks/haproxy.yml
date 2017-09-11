@@ -1,10 +1,6 @@
 ---
 # # HAProxy
 
-# We run haproxy on all of the Docker hosts to proxy HTTP and HTTPS connections through to containers.
-# HTTPS is trickier because some browsers don't support SNI, but it's worth losing a small part of
-# traffic for the convenience we get from Docker in general.
-
 # Install the haproxy repo and then install haproxy itself.
 - name: add haproxy repo
   apt_repository: repo='ppa:vbernat/haproxy-1.7' update_cache=yes

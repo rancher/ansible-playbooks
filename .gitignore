@@ -2,6 +2,7 @@
 ###########
 *.retry
 test.yml
+inventory/ec2.py
 
 # Compiled source #
 ###################

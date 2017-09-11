@@ -19,6 +19,13 @@ It assumes that you have already done the following things:
   
 If you have not done these things, please refer back to the README for links to documentation on how to set up these pieces.
 
+## Edit `ansible.cfg`
+
+Set the `ansible_user` variable for the user account you will be using on the remote hosts. For default EC2 hosts, this will be one of the following:
+
+  - Debian: admin
+  - Ubuntu: ubuntu
+
 ## Edit `group_vars`
 
   1. Edit `all.yml` to set the Docker version. This is used in [this install command](http://docs.rancher.com/rancher/v1.6/en/hosts/#supported-docker-versions), so versions should only be in the form of `major.minor`.

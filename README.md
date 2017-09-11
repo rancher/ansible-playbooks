@@ -28,6 +28,18 @@ apt-get -qq update
 apt-get -qq -y install python-pip
 ```
 
+Alternatively, add the following:
+```
+#cloud-config
+
+package_upgrade: true
+package_update: true
+packages: 
+  - curl
+  - python
+  - python-pip
+```
+
 ### Ansible Vault
 
 This project uses the [Ansible Vault](http://docs.ansible.com/ansible/playbooks_vault.html)
