@@ -54,17 +54,17 @@ packages:
     * 1 or 2 `t2.small` instances with 16 GB of disk
     * tag these hosts with
       * `project=rancher`
-      * `ansible_role=server`
+      * `rancher_role=server`
   * Load Balancer
     * 1 `t2.nano` instance with 8 GB of disk
     * tag these hosts with
       * `project=rancher`
-      * `ansible_role=loadbalancer`
+      * `rancher_role=loadbalancer`
   * Nodes
     * 1 or more `t2.large` instances with 32 GB of disk
     * tag these hosts with
       * `project=rancher`
-      * `ansible_role=node`
+      * `rancher_role=node`
       * `ansible_env=1a5` (to put them in the Default environment)
   * Database
     * 1 `db.t2.small` RDS instance (MySQL or compatible)
