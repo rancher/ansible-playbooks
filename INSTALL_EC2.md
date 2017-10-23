@@ -65,7 +65,7 @@ packages:
     * tag these hosts with
       * `project=rancher`
       * `rancher_role=node`
-      * `ansible_env=1a5` (to put them in the Default environment)
+      * `rancher_env=1a5` (to put them in the Default environment)
   * Database
     * 1 `db.t2.small` RDS instance (MySQL or compatible)
 
